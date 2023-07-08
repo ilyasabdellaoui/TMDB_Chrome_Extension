@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   addWatchListButton.addEventListener('click', function () {
     initialContent.style.display = 'none';
-    watchListContent.style.display = 'block';
+    watchListContent.style.display = 'flex';
   });
 
   submitWatchListButton.addEventListener('click', function () {
