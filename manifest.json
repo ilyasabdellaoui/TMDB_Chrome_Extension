@@ -9,8 +9,11 @@
       "js": ["contentScript.js"]
     }
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "background": {
-    "service_worker": "backgroundScript.js"
+  "service_worker": "backgroundScript.js"
   },
   "permissions": ["activeTab", "storage"],
   "icons": {

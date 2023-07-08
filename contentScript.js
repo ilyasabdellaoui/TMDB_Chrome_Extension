@@ -1,10 +1,13 @@
 // Find the table with class "card credits"
 var creditsTable = document.querySelector('table.card.credits');
 
-// Check if the creditsTable exists
 if (creditsTable) {
+// ...
+
+// ...
+
 // Function to retrieve the API key from the background script
-async function getApiKey() {
+function getApiKey() {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ type: 'getApiKey' }, (apiKey) => {
       if (apiKey) {
@@ -16,13 +19,7 @@ async function getApiKey() {
   });
 }
 
-// Function to prompt the user for the API key
-async function promptApiKey() {
-  return new Promise((resolve) => {
-    const apiKeyInput = prompt('Please enter your API key:');
-    resolve(apiKeyInput);
-  });
-}
+// ...
 
 // Main function to handle the logic
 async function main() {
@@ -33,19 +30,12 @@ async function main() {
     // API key exists, continue with your logic using the key
     console.log('API key:', apiKey);
   } else {
-    // API key doesn't exist, prompt the user to enter it
-    const apiKeyInput = await promptApiKey();
-
-    if (apiKeyInput) {
-      // Store the API key in Chrome storage
-      chrome.runtime.sendMessage({ type: 'setApiKey', apiKey: apiKeyInput });
-      console.log('API key:', apiKeyInput);
-    } else {
-      // Handle case when the user cancels or does not provide an API key
-      console.log('No API key provided');
-    }
+    // API key doesn't exist, open the extension's popup for API key input
+    chrome.runtime.sendMessage({ type: 'promptApiKey' });
   }
 }
+
+// ...
 
   // Find all tables with class "credit_group" within the creditsTable
   var creditTables = creditsTable.querySelectorAll('table.credit_group');
