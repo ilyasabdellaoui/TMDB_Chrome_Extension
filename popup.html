@@ -5,7 +5,6 @@
     <style>
       body {
         width: 350px;
-        height: 130px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -15,12 +14,26 @@
         font-family: Arial, sans-serif;
       }
 
+      #initialContent,
+      #watchListContent {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .button-group {
+        flex-direction: row;
+        gap: 10px;
+      }
+
       h3 {
         font-size: 16px;
         margin-bottom: 10px;
       }
 
       input[type="text"] {
+        border-radius: 10px;
         width: 300px;
         padding: 5px;
         margin-bottom: 10px;
@@ -42,12 +55,32 @@
         background-color: #ffffff;
         color: #032540;
       }
+
+      textarea {
+        border-radius: 10px;
+        width: 300px;
+        padding: 5px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-family: Roboto;
+        resize: vertical;
+      }
     </style>
   </head>
   <body>
-    <h3>Enter your API key:</h3>
-    <input type="text" id="apiKeyInput" />
-    <button id="submitButton">Submit</button>
+    <div id="initialContent">
+      <h3>Enter your API key:</h3>
+      <input type="text" id="apiKeyInput" />
+      <div class="button-group">
+        <button id="submitButton">Submit</button>
+        <button id="addWatchList">Add to Watchlist</button>
+      </div>
+    </div>
+    <div id="watchListContent" style="display: none;">
+      <h3>Enter your movie list:</h3>
+      <textarea id="watchListInput" rows="4" cols="50"></textarea>
+      <button id="submitWatchListButton">Submit</button>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>
