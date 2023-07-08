@@ -2,40 +2,33 @@
 var creditsTable = document.querySelector('table.card.credits');
 
 if (creditsTable) {
-// ...
 
-// ...
-
-// Function to retrieve the API key from the background script
-function getApiKey() {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ type: 'getApiKey' }, (apiKey) => {
-      if (apiKey) {
-        resolve(apiKey);
-      } else {
-        resolve(null);
-      }
+  // Function to retrieve the API key from the background script
+  function getApiKey() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: 'getApiKey' }, (apiKey) => {
+        if (apiKey) {
+          resolve(apiKey);
+        } else {
+          resolve(null);
+        }
+      });
     });
-  });
-}
-
-// ...
-
-// Main function to handle the logic
-async function main() {
-  // Get the API key from storage
-  const apiKey = await getApiKey();
-
-  if (apiKey) {
-    // API key exists, continue with your logic using the key
-    console.log('API key:', apiKey);
-  } else {
-    // API key doesn't exist, open the extension's popup for API key input
-    chrome.runtime.sendMessage({ type: 'promptApiKey' });
   }
-}
 
-// ...
+  // Main function to handle the logic
+  async function main() {
+    // Get the API key from storage
+    const apiKey = await getApiKey();
+
+    if (apiKey) {
+      // API key exists, continue with your logic using the key
+      console.log('API key:', apiKey);
+    } else {
+      // API key doesn't exist, open the extension's popup for API key input
+      chrome.runtime.sendMessage({ type: 'promptApiKey' });
+    }
+  }
 
   // Find all tables with class "credit_group" within the creditsTable
   var creditTables = creditsTable.querySelectorAll('table.credit_group');
@@ -49,17 +42,17 @@ async function main() {
 
       // Iterate over each table row
       tableRows.forEach(async function (row) {
-        row.addEventListener('mouseenter', function() {
+        row.addEventListener('mouseenter', function () {
           row.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.1)';
           row.style.transition = 'all .7s ease-in-out';
         });
-      
-        row.addEventListener('mouseleave', function() {
+
+        row.addEventListener('mouseleave', function () {
           row.style.boxShadow = 'none';
           row.style.transform = 'none';
           row.style.transition = 'all .7s ease-in-out';
         });
-      
+
 
         var tdRightElements = row.querySelectorAll('td.role.true.account_adult_false.item_adult_false');
         tdRightElements.forEach(function (element) {
@@ -70,7 +63,7 @@ async function main() {
           element.style.border = '1px rgba(3, 37, 65, 0.3)';
           element.style.borderStyle = 'solid solid solid none';
         });
-        
+
         var tdLeftElements = row.querySelectorAll('td.year');
         tdLeftElements.forEach(function (element) {
           element.style.background = "rgba( 255, 255, 255, 0.25 )";
@@ -80,7 +73,7 @@ async function main() {
           element.style.border = '1px rgba(3, 37, 65, 0.3)';
           element.style.borderStyle = 'solid none solid solid';
         });
-        
+
         var tdCenterElements = row.querySelectorAll('td.seperator');
         tdCenterElements.forEach(function (element) {
           element.style.background = "rgba( 255, 255, 255, 0.25 )";
@@ -88,7 +81,7 @@ async function main() {
           element.style.webkitBackdropFilter = "blur(5px)";
           element.style.border = '1px rgba(3, 37, 65, 0.3)';
           element.style.borderStyle = 'solid none';
-        });         
+        });
 
         // Create and append the <hr> element
         var hrElement = document.createElement('hr');
