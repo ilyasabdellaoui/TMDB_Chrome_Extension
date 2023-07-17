@@ -198,58 +198,83 @@ document.addEventListener('DOMContentLoaded', function () {
     const notFoundMovies = [];
     const invalidEntry = [];
     const alreadyInWatchlistMovies = [];
-
+    const watchlistAPI = `https://api.themoviedb.org/3/account/19857865/watchlist?api_key=${apiKey}`;
+    const headers = {
+      "Content-Type": "application/json;charset=utf-8",
+      Authorization: bearerToken,
+    };
+  
     for (const movieEntry of movies) {
       const trimmedEntry = movieEntry.trim();
       const regex = /^(.*?)\s\((\d+)\)$/; // Regex pattern to extract movie title and year
-
-      if (regex.test(trimmedEntry)) {
-        const [, movieTitle, movieYear] = trimmedEntry.match(regex);
-
-        const movie = await searchMovie(movieTitle, movieYear);
-        if (movie) {
-          const movieId = movie.id;
-
-          const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
-          if (isInWatchlist) {
-            alreadyInWatchlistMovies.push(movieEntry);
-          } else {
-            // Create the payload for the request
-            const payload = {
-              media_type: "movie",
-              media_id: movieId,
-              watchlist: true,
-            };
-
-            // Create the headers for the request
-            const headers = {
-              "Content-Type": "application/json;charset=utf-8",
-              Authorization: bearerToken,
-            };
-
-            // Make the request to add the movie to the watchlist
-            const response = await fetch(
-              `https://api.themoviedb.org/3/account/19857865/watchlist?api_key=${apiKey}`,
-              {
-                method: "POST",
-                headers,
-                body: JSON.stringify(payload),
-              }
-            );
-
-            if (response.ok) {
-              console.log(`Added ${movieTitle} (${movieYear}) to watchlist`);
-              moviesAdded.push(`${movieTitle} (${movieYear})`);
-            } else {
-              console.error(`Error adding ${movieTitle} (${movieYear}) to watchlist:`, response.status);
-              errorMovies.push(`${movieTitle} (${movieYear})`);
-            }
-          }
-        } else {
-          notFoundMovies.push(movieEntry);
-        }
-      } else {
+  
+      if (!regex.test(trimmedEntry)) {
         invalidEntry.push(movieEntry);
+        continue;
+      }
+  
+      const [, movieTitle, movieYear] = trimmedEntry.match(regex);
+  
+      const movie = await searchMovie(movieTitle, movieYear);
+  
+      if (!movie) {
+        notFoundMovies.push(movieEntry);
+        continue;
+      }
+  
+      const movieId = movie.id;
+  
+      const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
+  
+      if (isInWatchlist) {
+        alreadyInWatchlistMovies.push(movieEntry);
+      } else {
+        const payload = {
+          media_type: "movie",
+          media_id: movieId,
+          watchlist: true,
+        };
+  
+        const response = await fetch(watchlistAPI, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
+  
+        if (response.ok) {
+          console.log(`Added ${movieTitle} (${movieYear}) to watchlist`);
+          moviesAdded.push(`${movieTitle} (${movieYear})`);
+        } else {
+          console.error(`Error adding ${movieTitle} (${movieYear}) to watchlist:`, response.status);
+          errorMovies.push(`${movieTitle} (${movieYear})`);
+        }
+      }
+    }
+  
+    // Show messages for already in watchlist, added, error, not found, and invalid entries
+    if (errorMovies.length > 0) {
+      const errorMessages = errorMovies.map((movie) => `${movie.title} (${movie.year})`);
+      const errorMessage = `Failed to add ${errorMovies.length} movies: ${errorMessages.join(', ')}.`;
+      showResponseMessage(errorMessage, 'error');
+    }
+  
+    if (notFoundMovies.length > 0) {
+      const notFoundMessages = notFoundMovies.map((movieEntry) => `${movieEntry}`);
+      const notFoundMessage = `Failed to find ${notFoundMovies.length} movies: ${notFoundMessages.join(', ')}.`;
+      showResponseMessage(notFoundMessage, 'error');
+    }
+  
+    if (invalidEntry.length > 0) {
+      const invalidMessages = invalidEntry.map((movieEntry) => `${movieEntry}`);
+      const invalidMessage = `Invalid Entry of ${invalidEntry.length} movies: ${invalidMessages.join(', ')}.`;
+      showResponseMessage(invalidMessage, 'error');
+    }
+
+    if (moviesAdded.length > 0) {
+      if (errorMovies.length === 0) {
+        showResponseMessage(`Added ${moviesAdded.length} movies successfully.`, 'success');
+      } else {
+        showResponseMessage(`Added ${moviesAdded.length} movies successfully, but some movies failed to be added.`, 'warning');
       }
     }
 
@@ -258,31 +283,5 @@ document.addEventListener('DOMContentLoaded', function () {
       const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
       showResponseMessage(warningMessage, 'warning');
     }
-
-    if (moviesAdded.length > 0) {
-      if (errorMovies.length === 0) {
-        showResponseMessage(`Added all ${moviesAdded.length} movies successfully.`, 'success');
-      } else {
-        showResponseMessage(`Added ${moviesAdded.length} movies successfully, but some movies failed to be added.`, 'warning');
-      }
-    }
-
-    if (errorMovies.length > 0) {
-      const errorMessages = errorMovies.map((movie) => `${movie.title} (${movie.year})`);
-      const errorMessage = `Failed to add ${errorMovies.length} movies: ${errorMessages.join(', ')}.`;
-      showResponseMessage(errorMessage, 'error');
-    }
-
-    if (notFoundMovies.length > 0) {
-      const notFoundMessages = notFoundMovies.map((movieEntry) => `${movieEntry}`);
-      const notFoundMessage = `Failed to find ${notFoundMovies.length} movies: ${notFoundMessages.join(', ')}.`;
-      showResponseMessage(notFoundMessage, 'error');
-    }
-
-    if (invalidEntry.length > 0) {
-      const invalidMessages = invalidEntry.map((movieEntry) => `${movieEntry}`);
-      const invalidMessage = `Invalid Entry of ${invalidEntry.length} movies: ${invalidMessages.join(', ')}.`;
-      showResponseMessage(invalidMessage, 'error');
-    }
-  }
+  }  
 });
