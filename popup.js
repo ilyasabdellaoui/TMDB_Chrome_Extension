@@ -145,38 +145,51 @@ document.addEventListener('DOMContentLoaded', function () {
       Authorization: bearerToken,
     };
   
-    let page = 1;
-    let totalPages = 1;
-    let isInWatchlist = false;
+    const response = await fetch(
+      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
   
-    while (page <= totalPages && !isInWatchlist) {
-      // Make the request to retrieve the user's watchlist
-      const response = await fetch(
-        `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}&page=${page}`,
-        {
-          method: "GET",
-          headers,
+    if (response.ok) {
+      const data = await response.json();
+      const watchlistMovies = data.results;
+  
+      // Check if the movie with the given movieId is in the watchlist
+      const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
+  
+      if (!isInWatchlist && data.total_pages > 1) {
+        // Fetch remaining pages of the watchlist in parallel
+        const pagePromises = [];
+        for (let page = 2; page <= data.total_pages; page++) {
+          pagePromises.push(
+            fetch(
+              `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}&page=${page}`,
+              {
+                method: "GET",
+                headers,
+              }
+            )
+          );
         }
-      );
   
-      if (response.ok) {
-        const data = await response.json();
-        const watchlistMovies = data.results;
+        const pageResponses = await Promise.all(pagePromises);
+        const pageData = await Promise.all(pageResponses.map((res) => res.json()));
   
-        // Check if the movie with the given movieId is in the watchlist
-        isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
-  
-        // Update the total number of pages
-        totalPages = data.total_pages;
-      } else {
-        throw new Error(`Failed to check watchlist: ${response.status}`);
+        // Check if the movie is in any of the fetched pages
+        for (const pageMovies of pageData) {
+          if (pageMovies.results.some((movie) => movie.id === movieId)) {
+            return true;
+          }
+        }
       }
   
-      // Move to the next page
-      page++;
+      return isInWatchlist;
+    } else {
+      throw new Error(`Failed to check watchlist: ${response.status}`);
     }
-  
-    return isInWatchlist;
   }
 
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
@@ -198,7 +211,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const movieId = movie.id;
 
           const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
-          console.log(movieEntry + '' + isInWatchlist);
           if (isInWatchlist) {
             alreadyInWatchlistMovies.push(movieEntry);
           } else {
