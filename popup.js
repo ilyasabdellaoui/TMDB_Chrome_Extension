@@ -144,53 +144,39 @@ document.addEventListener('DOMContentLoaded', function () {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
     };
-
-    // Make the request to retrieve the user's watchlist
-    const response = await fetch(
-      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
-      {
-        method: "GET",
-        headers,
+  
+    let page = 1;
+    let totalPages = 1;
+    let isInWatchlist = false;
+  
+    while (page <= totalPages && !isInWatchlist) {
+      // Make the request to retrieve the user's watchlist
+      const response = await fetch(
+        `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}&page=${page}`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+  
+      if (response.ok) {
+        const data = await response.json();
+        const watchlistMovies = data.results;
+  
+        // Check if the movie with the given movieId is in the watchlist
+        isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
+  
+        // Update the total number of pages
+        totalPages = data.total_pages;
+      } else {
+        throw new Error(`Failed to check watchlist: ${response.status}`);
       }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      const watchlistMovies = data.results;
-
-      // Check if the movie with the given movieId is in the watchlist
-      const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
-      return isInWatchlist;
-    } else {
-      return false;
+  
+      // Move to the next page
+      page++;
     }
-  }
-
-  async function checkMovieInWatchlist(movieId, apiKey, bearerToken) {
-    const headers = {
-      "Content-Type": "application/json;charset=utf-8",
-      Authorization: bearerToken,
-    };
-
-    // Make the request to retrieve the user's watchlist
-    const response = await fetch(
-      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
-      {
-        method: "GET",
-        headers,
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      const watchlistMovies = data.results;
-
-      // Check if the movie with the given movieId is in the watchlist
-      const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
-      return isInWatchlist;
-    } else {
-      return false;
-    }
+  
+    return isInWatchlist;
   }
 
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
@@ -212,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
           const movieId = movie.id;
 
           const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
+          console.log(movieEntry + '' + isInWatchlist);
           if (isInWatchlist) {
             alreadyInWatchlistMovies.push(movieEntry);
           } else {
@@ -254,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
+    if (alreadyInWatchlistMovies.length > 0) {
+      const warningMessages = alreadyInWatchlistMovies.map((movie) => `${movie}`);
+      const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
+      showResponseMessage(warningMessage, 'warning');
+    }
+
     if (moviesAdded.length > 0) {
       if (errorMovies.length === 0) {
         showResponseMessage(`Added all ${moviesAdded.length} movies successfully.`, 'success');
@@ -278,12 +271,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const invalidMessages = invalidEntry.map((movieEntry) => `${movieEntry}`);
       const invalidMessage = `Invalid Entry of ${invalidEntry.length} movies: ${invalidMessages.join(', ')}.`;
       showResponseMessage(invalidMessage, 'error');
-    }
-
-    if (alreadyInWatchlistMovies.length > 0) {
-      const warningMessages = alreadyInWatchlistMovies.map((movie) => `${movie}`);
-      const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
-      showResponseMessage(warningMessage, 'warning');
     }
   }
 });
