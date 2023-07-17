@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   submitWatchListButton.addEventListener('click', async function () {
+    resetMessageDisplay();
     const bearerToken = bearerTokenInput.value.trim();
 
     if (bearerToken) {
@@ -66,15 +67,13 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('bearerToken :', bearerToken);
       });
     } else {
-      console.log('No bearerToken provided');
     }
     await main();
   });
 
   async function maintest() {
     let bearerToken = await getBearerToken();
-    console.log("Bearer : ", bearerToken);
-      if (!bearerToken) {
+    if (!bearerToken) {
       // Bearer token not found in input field, show the input field
       bearerTokenLabel.style.display = 'block';
       bearerTokenInput.style.display = 'block';
@@ -82,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function main() {
-    console.log('Running main function');
     const apiKey = await getApiKey();
     let bearerToken = await getBearerToken();
     bearerToken = `Bearer ${bearerToken}`;
@@ -93,9 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const movies = movieList.split(',');
 
       if (apiKey && bearerToken) {
-        console.log('Adding movies to watchlist');
         await addMoviesToWatchlist(movies, apiKey, bearerToken);
-        console.log('Finished adding movies to watchlist');
       } else {
         console.error('API key or bearer token not found');
       }
@@ -106,8 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   async function searchMovie(title, year = null) {
     const apiKey = await getApiKey();
-    console.log('Searching movie:', title);
-
     const params = { api_key: apiKey, query: title };
     if (year) {
       params.primary_release_year = year;
@@ -119,10 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await response.json();
       const results = data.results;
       if (results.length > 0) {
-        console.log('Movie found:', results[0].title);
         return results[0]; // Return the first result
       } else {
-        console.log('Movie not found');
         return null;
       }
     } else {
@@ -131,7 +123,83 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function showResponseMessage(message, type) {
+    const responseElement = document.getElementById('responseMessage');
+    const newMessageElement = document.createElement('p');
+    newMessageElement.textContent = message;
+    newMessageElement.classList.add(type);
+    responseElement.appendChild(newMessageElement);
+    responseElement.style.display = 'grid';
+    responseElement.style.textAlign = 'center';
+  }
+
+  function resetMessageDisplay() {
+    const responseMessageElement = document.getElementById('responseMessage');
+    // Clear the message content
+    responseMessageElement.textContent = '';
+  }
+
+  async function checkMovieInWatchlist(movieId, apiKey, bearerToken) {
+    const headers = {
+      "Content-Type": "application/json;charset=utf-8",
+      Authorization: bearerToken,
+    };
+
+    // Make the request to retrieve the user's watchlist
+    const response = await fetch(
+      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const watchlistMovies = data.results;
+
+      // Check if the movie with the given movieId is in the watchlist
+      const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
+      return isInWatchlist;
+    } else {
+      return false;
+    }
+  }
+
+  async function checkMovieInWatchlist(movieId, apiKey, bearerToken) {
+    const headers = {
+      "Content-Type": "application/json;charset=utf-8",
+      Authorization: bearerToken,
+    };
+
+    // Make the request to retrieve the user's watchlist
+    const response = await fetch(
+      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const watchlistMovies = data.results;
+
+      // Check if the movie with the given movieId is in the watchlist
+      const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
+      return isInWatchlist;
+    } else {
+      return false;
+    }
+  }
+
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
+    const moviesAdded = [];
+    const errorMovies = [];
+    const notFoundMovies = [];
+    const invalidEntry = [];
+    const alreadyInWatchlistMovies = [];
+
     for (const movieEntry of movies) {
       const trimmedEntry = movieEntry.trim();
       const regex = /^(.*?)\s\((\d+)\)$/; // Regex pattern to extract movie title and year
@@ -143,49 +211,79 @@ document.addEventListener('DOMContentLoaded', function () {
         if (movie) {
           const movieId = movie.id;
 
-          // Create the payload for the request
-          const payload = {
-            "media_type": "movie",
-            "media_id": movieId,
-            "watchlist": true
-          };
-
-          // Create the headers for the request
-          const headers = {
-            "Content-Type": "application/json;charset=utf-8",
-            Authorization: bearerToken,
-          };
-
-          // Make the request
-          const response = await fetch(
-            `https://api.themoviedb.org/3/account/19857865/watchlist?api_key=${apiKey}`,
-            {
-              method: "POST",
-              headers,
-              body: JSON.stringify(payload)
-            }
-          );
-          if (response.ok) {
-            console.log(`Added ${movieTitle} (${movieYear}) to watchlist`);
-            const data = await response.json();
-            console.log(data);
+          const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
+          if (isInWatchlist) {
+            alreadyInWatchlistMovies.push(movieEntry);
           } else {
-            console.error(
-              `Error adding ${movieTitle} (${movieYear}) to watchlist:`,
-              response.status
-            );
-          }
+            // Create the payload for the request
+            const payload = {
+              media_type: "movie",
+              media_id: movieId,
+              watchlist: true,
+            };
 
+            // Create the headers for the request
+            const headers = {
+              "Content-Type": "application/json;charset=utf-8",
+              Authorization: bearerToken,
+            };
+
+            // Make the request to add the movie to the watchlist
+            const response = await fetch(
+              `https://api.themoviedb.org/3/account/19857865/watchlist?api_key=${apiKey}`,
+              {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload),
+              }
+            );
+
+            if (response.ok) {
+              console.log(`Added ${movieTitle} (${movieYear}) to watchlist`);
+              moviesAdded.push(`${movieTitle} (${movieYear})`);
+            } else {
+              console.error(`Error adding ${movieTitle} (${movieYear}) to watchlist:`, response.status);
+              errorMovies.push(`${movieTitle} (${movieYear})`);
+            }
+          }
         } else {
-          console.error(`Movie not found: ${trimmedEntry}`);
+          notFoundMovies.push(movieEntry);
         }
       } else {
-        console.error(`Invalid movie entry: ${trimmedEntry}`);
+        invalidEntry.push(movieEntry);
       }
     }
 
-    console.log('After pause');
+    if (moviesAdded.length > 0) {
+      if (errorMovies.length === 0) {
+        showResponseMessage(`Added all ${moviesAdded.length} movies successfully.`, 'success');
+      } else {
+        showResponseMessage(`Added ${moviesAdded.length} movies successfully, but some movies failed to be added.`, 'warning');
+      }
+    }
+
+    if (errorMovies.length > 0) {
+      const errorMessages = errorMovies.map((movie) => `${movie.title} (${movie.year})`);
+      const errorMessage = `Failed to add ${errorMovies.length} movies: ${errorMessages.join(', ')}.`;
+      showResponseMessage(errorMessage, 'error');
+    }
+
+    if (notFoundMovies.length > 0) {
+      const notFoundMessages = notFoundMovies.map((movieEntry) => `${movieEntry}`);
+      const notFoundMessage = `Failed to find ${notFoundMovies.length} movies: ${notFoundMessages.join(', ')}.`;
+      showResponseMessage(notFoundMessage, 'error');
+    }
+
+    if (invalidEntry.length > 0) {
+      const invalidMessages = invalidEntry.map((movieEntry) => `${movieEntry}`);
+      const invalidMessage = `Invalid Entry of ${invalidEntry.length} movies: ${invalidMessages.join(', ')}.`;
+      showResponseMessage(invalidMessage, 'error');
+    }
+
+    if (alreadyInWatchlistMovies.length > 0) {
+      const warningMessages = alreadyInWatchlistMovies.map((movie) => `${movie}`);
+      const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
+      showResponseMessage(warningMessage, 'warning');
+    }
   }
-
-
 });
