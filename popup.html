@@ -70,15 +70,18 @@
   <body>
     <div id="initialContent">
       <h3>Enter your API key:</h3>
-      <input type="text" id="apiKeyInput" />
+      <input type="text" id="apiKeyInput" placeholder="api key..."/>
       <div class="button-group">
         <button id="submitButton">Submit</button>
         <button id="addWatchList">Add to Watchlist</button>
       </div>
     </div>
     <div id="watchListContent" style="display: none;">
+      <h3 id="bearerTokenLabel" style="display: none;">Enter your bearer token:</h3>
+      <input type="text" id="bearerTokenInput" placeholder="Bearer token..." style="display: none;"/>
       <h3>Enter your movie list:</h3>
-      <textarea id="watchListInput" rows="4" cols="50"></textarea>
+      <textarea id="watchListInput" rows="4" cols="50" placeholder="Movie1 (year),
+Movie2 (year)"></textarea>
       <button id="submitWatchListButton">Submit</button>
     </div>
     <script src="popup.js"></script>

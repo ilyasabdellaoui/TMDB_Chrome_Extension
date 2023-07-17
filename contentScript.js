@@ -1,3 +1,5 @@
+const bearerTokenLabel = document.getElementById('bearerTokenLabel');
+const bearerTokenInput = document.getElementById('bearerTokenInput');
 // Find the table with class "card credits"
 var creditsTable = document.querySelector('table.card.credits');
 
@@ -16,6 +18,19 @@ if (creditsTable) {
     });
   }
 
+  // Function to retrieve the bearer token from the background script
+  function getBearerToken() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: 'getBearerToken' }, (bearerToken) => {
+        if (bearerToken) {
+          resolve(bearerToken);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  }
+
   // Main function to handle the logic
   async function main() {
     // Get the API key from storage
@@ -27,6 +42,17 @@ if (creditsTable) {
     } else {
       // API key doesn't exist, open the extension's popup for API key input
       chrome.runtime.sendMessage({ type: 'promptApiKey' });
+    }
+
+    // Get the bearer token from storage
+    const bearerToken = await getBearerToken();
+    if (bearerToken) {
+      // Bearer token exists, continue with your logic using the token
+      console.log('Bearer token:', bearerToken);
+    }
+    else {
+      // Bearer token doesn't exist, open the extension's popup for bearer token input
+      chrome.runtime.sendMessage({ type: 'promptBearerToken' });
     }
   }
 
