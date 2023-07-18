@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const progressBarContainer = document.querySelector('.progress-bar');
   const messageElement = document.querySelector('.message');
 
+  // Store the bearerToken, accountId and API key once retrieved.
+  let bearerToken; 
+  let accountId; 
+  let apiKey; 
+
   submitButton.addEventListener('click', function () {
     const apiKey = apiKeyInput.value.trim();
 
@@ -252,9 +257,16 @@ document.addEventListener('DOMContentLoaded', function () {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
     };
-    account_id = await getAccountDetails(bearerToken);
+    if (!accountId) {
+      // Retrieve the accountId if it's not available
+      accountId = await getAccountDetails(bearerToken);
+      if (!accountId) {
+        console.error('Failed to get the accountId. Please check the bearer token.');
+        return false;
+      }
+    }
     const response = await fetch(
-      `https://api.themoviedb.org/3/account/${account_id}/watchlist/movies?api_key=${apiKey}`,
+      `https://api.themoviedb.org/3/account/${accountId}/watchlist/movies?api_key=${apiKey}`,
       {
         method: "GET",
         headers,
@@ -274,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let page = 2; page <= data.total_pages; page++) {
           pagePromises.push(
             fetch(
-              `https://api.themoviedb.org/3/account/${account_id}/watchlist/movies?api_key=${apiKey}&page=${page}`,
+              `https://api.themoviedb.org/3/account/${accountId}/watchlist/movies?api_key=${apiKey}&page=${page}`,
               {
                 method: "GET",
                 headers,
@@ -301,14 +313,19 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
-    account_id = await getAccountDetails(bearerToken);
-
+    if (!accountId) {
+      accountId = await getAccountDetails(bearerToken);
+      if (!accountId) {
+        console.error('Failed to get the account_id. Please check the bearer token.');
+        return;
+      }
+    }
     const moviesAdded = [];
     const errorMovies = [];
     const notFoundMovies = [];
     const invalidEntry = [];
     const alreadyInWatchlistMovies = [];
-    const watchlistAPI = `https://api.themoviedb.org/3/account/${account_id}/watchlist?api_key=${apiKey}`;
+    const watchlistAPI = `https://api.themoviedb.org/3/account/${accountId}/watchlist?api_key=${apiKey}`;
     const headers = {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
