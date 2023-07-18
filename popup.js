@@ -12,9 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const messageElement = document.querySelector('.message');
 
   // Store the bearerToken, accountId and API key once retrieved.
-  let bearerToken; 
   let accountId; 
-  let apiKey; 
 
   submitButton.addEventListener('click', function () {
     const apiKey = apiKeyInput.value.trim();
