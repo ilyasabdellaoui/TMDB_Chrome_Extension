@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const submitWatchListButton = document.getElementById('submitWatchListButton');
   const bearerTokenLabel = document.getElementById('bearerTokenLabel');
   const bearerTokenInput = document.getElementById('bearerTokenInput');
-
-
+  const responseElement = document.getElementById('responseMessage'); // Added responseElement
 
   submitButton.addEventListener('click', function () {
     const apiKey = apiKeyInput.value.trim();
@@ -123,20 +122,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Function to show response messages
   function showResponseMessage(message, type) {
-    const responseElement = document.getElementById('responseMessage');
+    if (!responseElement) {
+      console.error('Error: responseMessage element not found.');
+      return;
+    }
+
     const newMessageElement = document.createElement('p');
     newMessageElement.textContent = message;
     newMessageElement.classList.add(type);
     responseElement.appendChild(newMessageElement);
     responseElement.style.display = 'grid';
     responseElement.style.textAlign = 'center';
+    // Add the progress-message class if the type is "loading"
+    if (type === 'loading') {
+      newMessageElement.classList.add('progress-message', 'animating');
+    }
+    return newMessageElement; // Return the new message element
   }
 
   function resetMessageDisplay() {
-    const responseMessageElement = document.getElementById('responseMessage');
+    if (!responseElement) {
+      console.error('Error: responseMessage element not found.');
+      return;
+    }
     // Clear the message content
-    responseMessageElement.textContent = '';
+    responseElement.textContent = '';
+    responseElement.style.display = 'none';
+  }
+
+  // Function to update loading message with dynamic dots
+  function updateLoadingMessage(loadingMessage) {
+    if (!loadingMessage) {
+      console.error('Error: loadingMessage element not found.');
+      return;
+    }
+  
+    // Create the spinner element
+    const spinner = document.createElement('span');
+    spinner.classList.add('spinner');
+  
+    // Add the spinner and text to the loading message
+    loadingMessage.appendChild(spinner);
+  
+    // Show the loading message
+    loadingMessage.style.display = 'block';
   }
 
   async function checkMovieInWatchlist(movieId, apiKey, bearerToken) {
@@ -146,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   
     const response = await fetch(
-      `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}`,
+      `https://api.themoviedb.org/3/account/{account_id}/watchlist/movies?api_key=${apiKey}`,
       {
         method: "GET",
         headers,
@@ -166,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let page = 2; page <= data.total_pages; page++) {
           pagePromises.push(
             fetch(
-              `https://api.themoviedb.org/3/account/19857865/watchlist/movies?api_key=${apiKey}&page=${page}`,
+              `https://api.themoviedb.org/3/account/{account_id}/watchlist/movies?api_key=${apiKey}&page=${page}`,
               {
                 method: "GET",
                 headers,
@@ -203,29 +234,33 @@ document.addEventListener('DOMContentLoaded', function () {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
     };
-  
+
+    // Show loading message with dynamic dots while processing
+    const loadingMessage = showResponseMessage("  ", "loading");
+    const loadingInterval = updateLoadingMessage(loadingMessage);
+
     for (const movieEntry of movies) {
       const trimmedEntry = movieEntry.trim();
       const regex = /^(.*?)\s\((\d+)\)$/; // Regex pattern to extract movie title and year
-  
+
       if (!regex.test(trimmedEntry)) {
         invalidEntry.push(movieEntry);
         continue;
       }
-  
+
       const [, movieTitle, movieYear] = trimmedEntry.match(regex);
-  
+
       const movie = await searchMovie(movieTitle, movieYear);
-  
+
       if (!movie) {
         notFoundMovies.push(movieEntry);
         continue;
       }
-  
+
       const movieId = movie.id;
-  
+
       const isInWatchlist = await checkMovieInWatchlist(movieId, apiKey, bearerToken);
-  
+
       if (isInWatchlist) {
         alreadyInWatchlistMovies.push(movieEntry);
       } else {
@@ -234,13 +269,13 @@ document.addEventListener('DOMContentLoaded', function () {
           media_id: movieId,
           watchlist: true,
         };
-  
+
         const response = await fetch(watchlistAPI, {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
         });
-  
+
         if (response.ok) {
           console.log(`Added ${movieTitle} (${movieYear}) to watchlist`);
           moviesAdded.push(`${movieTitle} (${movieYear})`);
@@ -250,20 +285,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     }
-  
+
+    // Hide the loading message when all responses are displayed
+    clearInterval(loadingInterval);
+    hideLoadingMessage(loadingMessage);
+
     // Show messages for already in watchlist, added, error, not found, and invalid entries
     if (errorMovies.length > 0) {
       const errorMessages = errorMovies.map((movie) => `${movie.title} (${movie.year})`);
       const errorMessage = `Failed to add ${errorMovies.length} movies: ${errorMessages.join(', ')}.`;
       showResponseMessage(errorMessage, 'error');
     }
-  
+
     if (notFoundMovies.length > 0) {
       const notFoundMessages = notFoundMovies.map((movieEntry) => `${movieEntry}`);
       const notFoundMessage = `Failed to find ${notFoundMovies.length} movies: ${notFoundMessages.join(', ')}.`;
       showResponseMessage(notFoundMessage, 'error');
     }
-  
+
     if (invalidEntry.length > 0) {
       const invalidMessages = invalidEntry.map((movieEntry) => `${movieEntry}`);
       const invalidMessage = `Invalid Entry of ${invalidEntry.length} movies: ${invalidMessages.join(', ')}.`;
@@ -283,5 +322,16 @@ document.addEventListener('DOMContentLoaded', function () {
       const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
       showResponseMessage(warningMessage, 'warning');
     }
-  }  
+  }
+
+  function hideLoadingMessage(loadingMessage) {
+    if (!loadingMessage) {
+      console.error('Error: loadingMessage element not found.');
+      return;
+    }
+
+      loadingMessage.textContent = ``;
+      loadingMessage.style.display = 'none';
+      return loadingMessage;
+  }
 });
