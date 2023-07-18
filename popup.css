@@ -1,0 +1,159 @@
+body {
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #032540;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+#initialContent,
+#watchListContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-group {
+    flex-direction: row;
+    gap: 10px;
+}
+
+h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    border-radius: 10px;
+    width: 300px;
+    padding: 5px;
+    margin-bottom: 10px;
+    font-size: 19px;
+    font-family: Roboto;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #01b4e4;
+    color: #ffffff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #ffffff;
+    color: #032540;
+}
+
+textarea {
+    border-radius: 10px;
+    width: 300px;
+    padding: 5px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-family: Roboto;
+    resize: vertical;
+}
+
+.response-message {
+    margin-top: 10px;
+    font-weight: bold;
+    display: none;
+}
+
+.success,
+.warning,
+.error {
+    margin: 5px 0;
+    color: #FFFFFF;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: "Source Sans Pro", Arial, sans-serif;
+    font-weight: bold;
+}
+
+.success {
+    background-color: #5FB662;
+}
+
+.warning {
+    background-color: #ffa600;
+}
+
+.error {
+    background-color: #FF3448;
+}
+
+.progress-message {
+    color: #ffffff;
+    border-radius: 5px;
+    font-family: "Source Sans Pro", Arial, sans-serif;
+    font-weight: bold;
+    display: none;
+    position: relative;
+    text-align: center;
+}
+
+.progress-message .spinner {
+    display: inline-block;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #ffffff;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.progress-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.progress {
+    width: 100%;
+    height: 8px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.message {
+    margin-top: 10px;
+    font-weight: bold;
+    display: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: "Source Sans Pro", Arial, sans-serif;
+    font-size: 16px;
+    text-align: center;
+}
+
+.message.success {
+    background-color: #5FB662;
+    color: #ffffff;
+}
+
+.message.error {
+    background-color: #FF3448;
+    color: #ffffff;
+}

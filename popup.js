@@ -7,23 +7,68 @@ document.addEventListener('DOMContentLoaded', function () {
   const bearerTokenLabel = document.getElementById('bearerTokenLabel');
   const bearerTokenInput = document.getElementById('bearerTokenInput');
   const responseElement = document.getElementById('responseMessage'); // Added responseElement
+  const progressBar = document.querySelector('.progress');
+  const progressBarContainer = document.querySelector('.progress-bar');
+  const messageElement = document.querySelector('.message');
 
   submitButton.addEventListener('click', function () {
     const apiKey = apiKeyInput.value.trim();
 
     if (apiKey) {
-      // Store the API key in Chrome storage
-      chrome.storage.sync.set({ apiKey }, function () {
-        console.log('API key:', apiKey);
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-          const activeTab = tabs[0];
-          chrome.tabs.reload(activeTab.id);
-        });
+      // Show the progress bar with a spinner
+      progressBarContainer.style.display = 'flex';
+      progressBar.style.display = 'inline-block';
+
+      // Check the validity of the API key
+      verifyApiKey(apiKey).then((isValid) => {
+        // Hide the progress bar after the API key verification
+        progressBarContainer.style.display = 'none';
+        progressBar.style.display = 'none';
+
+        if (isValid) {
+          // Store the API key in Chrome storage
+          chrome.storage.sync.set({ apiKey }, function () {
+            console.log('API key:', apiKey);
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+              const activeTab = tabs[0];
+              chrome.tabs.reload(activeTab.id);
+              showApiMessage('API key submitted successfully.', 'success');
+            });
+          });
+        } else {
+          showApiMessage('Invalid API key. Please enter a valid API key.', 'error');
+        }
       });
     } else {
-      console.log('No API key provided');
+      showApiMessage('Please enter a valid API key.', 'error');
     }
   });
+
+  function verifyApiKey(apiKey) {
+    // Simple test request to verify the validity of the API key
+    const testUrl = `https://api.themoviedb.org/3/configuration?api_key=${apiKey}`;
+    return fetch(testUrl)
+      .then((response) => response.json())
+      .then((data) => {
+        return data.status_code !== 7; // A status code of 7 indicates an invalid API key
+      })
+      .catch(() => {
+        return false;
+      });
+  }
+
+  // Function to show messages
+  function showApiMessage(message, type) {
+    messageElement.textContent = message;
+    messageElement.classList.remove('success', 'error');
+    messageElement.classList.add(type);
+    messageElement.style.display = 'block';
+
+    // Hide the message after 3 seconds (adjust as needed)
+    setTimeout(function () {
+      messageElement.style.display = 'none';
+    }, 3000);
+  }
 
   // Function to retrieve the API key from the background script
   function getApiKey() {
@@ -158,14 +203,14 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error('Error: loadingMessage element not found.');
       return;
     }
-  
+
     // Create the spinner element
     const spinner = document.createElement('span');
     spinner.classList.add('spinner');
-  
+
     // Add the spinner and text to the loading message
     loadingMessage.appendChild(spinner);
-  
+
     // Show the loading message
     loadingMessage.style.display = 'block';
   }
@@ -175,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
     };
-  
+
     const response = await fetch(
       `https://api.themoviedb.org/3/account/{account_id}/watchlist/movies?api_key=${apiKey}`,
       {
@@ -183,14 +228,14 @@ document.addEventListener('DOMContentLoaded', function () {
         headers,
       }
     );
-  
+
     if (response.ok) {
       const data = await response.json();
       const watchlistMovies = data.results;
-  
+
       // Check if the movie with the given movieId is in the watchlist
       const isInWatchlist = watchlistMovies.some((movie) => movie.id === movieId);
-  
+
       if (!isInWatchlist && data.total_pages > 1) {
         // Fetch remaining pages of the watchlist in parallel
         const pagePromises = [];
@@ -205,10 +250,10 @@ document.addEventListener('DOMContentLoaded', function () {
             )
           );
         }
-  
+
         const pageResponses = await Promise.all(pagePromises);
         const pageData = await Promise.all(pageResponses.map((res) => res.json()));
-  
+
         // Check if the movie is in any of the fetched pages
         for (const pageMovies of pageData) {
           if (pageMovies.results.some((movie) => movie.id === movieId)) {
@@ -216,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
       }
-  
+
       return isInWatchlist;
     } else {
       throw new Error(`Failed to check watchlist: ${response.status}`);
@@ -330,8 +375,8 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-      loadingMessage.textContent = ``;
-      loadingMessage.style.display = 'none';
-      return loadingMessage;
+    loadingMessage.textContent = ``;
+    loadingMessage.style.display = 'none';
+    return loadingMessage;
   }
 });
