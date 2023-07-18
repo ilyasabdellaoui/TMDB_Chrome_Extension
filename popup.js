@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   const apiKeyInput = document.getElementById('apiKeyInput');
   const submitButton = document.getElementById('submitButton');
   const addWatchListButton = document.getElementById('addWatchList');
@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const messageElement = document.querySelector('.message');
 
   // Store the bearerToken, accountId and API key once retrieved.
-  let bearerToken; 
-  let accountId; 
-  let apiKey; 
+  let bearerToken;
+  let accountId;
+  let apiKey;
+
+  // Fetch the API key and bearer token once
+  apiKey = await getApiKey();
+  bearerToken = await getBearerToken();
 
   submitButton.addEventListener('click', function () {
     const apiKey = apiKeyInput.value.trim();
@@ -153,7 +157,13 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   async function maintest() {
-    let bearerToken = await getBearerToken();
+    if (!bearerToken) {
+      let bearerToken = await getBearerToken();
+      if (!bearerToken) {
+        console.error('Failed to get the bearerToken');
+        return false;
+      }
+    }
     if (!bearerToken) {
       // Bearer token not found in input field, show the input field
       bearerTokenLabel.style.display = 'block';
@@ -162,8 +172,20 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function main() {
-    const apiKey = await getApiKey();
-    let bearerToken = await getBearerToken();
+    if (!apiKey) {
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        console.error('Failed to get the apiKey');
+        return false;
+      }
+    }
+    if (!bearerToken) {
+      let bearerToken = await getBearerToken();
+      if (!bearerToken) {
+        console.error('Failed to get the bearerToken');
+        return false;
+      }
+    }
     bearerToken = `Bearer ${bearerToken}`;
 
     // Retrieve the movie list from the input field
@@ -181,11 +203,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Global cache object to store search results
+  const movieCache = new Map();
+
   async function searchMovie(title, year = null) {
-    const apiKey = await getApiKey();
+    if (!apiKey) {
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        console.error('Failed to get the apiKey');
+        return false;
+      }
+    }
     const params = { api_key: apiKey, query: title };
     if (year) {
       params.primary_release_year = year;
+    }
+
+    // Check if the movie is already in the cache
+    const cacheKey = JSON.stringify(params);
+    if (movieCache.has(cacheKey)) {
+      return movieCache.get(cacheKey);
     }
 
     const url = 'https://api.themoviedb.org/3/search/movie';
@@ -194,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await response.json();
       const results = data.results;
       if (results.length > 0) {
+        // Cache the search results for future use
+        movieCache.set(cacheKey, results[0]);
         return results[0]; // Return the first result
       } else {
         return null;
