@@ -181,11 +181,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Global cache object to store search results
+  const movieCache = new Map();
+
   async function searchMovie(title, year = null) {
     const apiKey = await getApiKey();
+
     const params = { api_key: apiKey, query: title };
     if (year) {
       params.primary_release_year = year;
+    }
+
+    // Check if the movie is already in the cache
+    const cacheKey = JSON.stringify(params);
+    if (movieCache.has(cacheKey)) {
+      return movieCache.get(cacheKey);
     }
 
     const url = 'https://api.themoviedb.org/3/search/movie';
@@ -194,6 +204,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await response.json();
       const results = data.results;
       if (results.length > 0) {
+        // Cache the search results for future use
+        movieCache.set(cacheKey, results[0]);
         return results[0]; // Return the first result
       } else {
         return null;
