@@ -12,9 +12,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const messageElement = document.querySelector('.message');
 
   // Store the bearerToken, accountId and API key once retrieved.
-  let accountId; 
+  let accountId;
+
+// Function to show the spinner
+function showSpinner() {
+  const spinner = document.createElement('span');
+  spinner.classList.add('spinner');
+  messageElement.insertAdjacentElement('afterend', spinner);
+}
+
+// Function to hide the spinner
+function hideSpinner() {
+  const spinner = document.querySelector('.spinner');
+  if (spinner) {
+    spinner.remove();
+  }
+}
 
   submitButton.addEventListener('click', function () {
+    showSpinner();
+
     const apiKey = apiKeyInput.value.trim();
 
     if (apiKey) {
@@ -36,28 +53,33 @@ document.addEventListener('DOMContentLoaded', function () {
               const activeTab = tabs[0];
               chrome.tabs.reload(activeTab.id);
               showApiMessage('API key submitted successfully.', 'success');
+
+              hideSpinner();
             });
           });
         } else {
+          hideSpinner();
+
           showApiMessage('Invalid API key. Please enter a valid API key.', 'error');
         }
       });
     } else {
+      hideSpinner();
+
       showApiMessage('Please enter a valid API key.', 'error');
     }
   });
 
-  function verifyApiKey(apiKey) {
+  async function verifyApiKey(apiKey) {
     // Simple test request to verify the validity of the API key
     const testUrl = `https://api.themoviedb.org/3/configuration?api_key=${apiKey}`;
-    return fetch(testUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        return data.status_code !== 7; // A status code of 7 indicates an invalid API key
-      })
-      .catch(() => {
-        return false;
-      });
+    try {
+      const response = await fetch(testUrl);
+      const data = await response.json();
+      return data.status_code !== 7;
+    } catch {
+      return false;
+    }
   }
 
   // Function to show messages
@@ -67,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
     messageElement.classList.add(type);
     messageElement.style.display = 'block';
 
-    // Hide the message after 3 seconds (adjust as needed)
+    // Hide the message after 3 seconds
     setTimeout(function () {
       messageElement.style.display = 'none';
     }, 3000);
@@ -110,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (accountDetails && accountDetails.id) {
       const accountId = accountDetails.id;
-      console.log('Account ID:', accountId); // This should print the correct account ID
+      console.log('Account ID:', accountId);
       return accountId;
     }
     else {
@@ -323,6 +345,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
+    // Show loading message with dynamic dots while processing
+    const loadingMessage = showResponseMessage("  ", "loading");
+    const loadingInterval = updateLoadingMessage(loadingMessage);
+    
     if (!accountId) {
       accountId = await getAccountDetails(bearerToken);
       if (!accountId) {
@@ -340,10 +366,6 @@ document.addEventListener('DOMContentLoaded', function () {
       "Content-Type": "application/json;charset=utf-8",
       Authorization: bearerToken,
     };
-
-    // Show loading message with dynamic dots while processing
-    const loadingMessage = showResponseMessage("  ", "loading");
-    const loadingInterval = updateLoadingMessage(loadingMessage);
 
     for (const movieEntry of movies) {
       const trimmedEntry = movieEntry.trim();
