@@ -121,22 +121,6 @@ textarea {
     }
 }
 
-.progress-bar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-.progress {
-    width: 100%;
-    height: 8px;
-    background-color: #f1f1f1;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
 .message {
     margin-top: 10px;
     font-weight: bold;

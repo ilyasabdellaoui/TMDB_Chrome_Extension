@@ -7,27 +7,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const bearerTokenLabel = document.getElementById('bearerTokenLabel');
   const bearerTokenInput = document.getElementById('bearerTokenInput');
   const responseElement = document.getElementById('responseMessage'); // Added responseElement
-  const progressBar = document.querySelector('.progress');
-  const progressBarContainer = document.querySelector('.progress-bar');
   const messageElement = document.querySelector('.message');
 
-  // Store the bearerToken, accountId and API key once retrieved.
+  // Store the accountId once retrieved.
   let accountId;
 
-// Function to show the spinner
-function showSpinner() {
-  const spinner = document.createElement('span');
-  spinner.classList.add('spinner');
-  messageElement.insertAdjacentElement('afterend', spinner);
-}
-
-// Function to hide the spinner
-function hideSpinner() {
-  const spinner = document.querySelector('.spinner');
-  if (spinner) {
-    spinner.remove();
+  // Function to show the spinner
+  function showSpinner() {
+    const spinner = document.createElement('span');
+    spinner.classList.add('spinner');
+    spinner.style.marginTop = '20px';
+    messageElement.insertAdjacentElement('afterend', spinner);
   }
-}
+
+  // Function to hide the spinner
+  function hideSpinner() {
+    const spinner = document.querySelector('.spinner');
+    if (spinner) {
+      spinner.remove();
+    }
+  }
 
   submitButton.addEventListener('click', function () {
     showSpinner();
@@ -35,15 +34,8 @@ function hideSpinner() {
     const apiKey = apiKeyInput.value.trim();
 
     if (apiKey) {
-      // Show the progress bar with a spinner
-      progressBarContainer.style.display = 'flex';
-      progressBar.style.display = 'inline-block';
-
       // Check the validity of the API key
       verifyApiKey(apiKey).then((isValid) => {
-        // Hide the progress bar after the API key verification
-        progressBarContainer.style.display = 'none';
-        progressBar.style.display = 'none';
 
         if (isValid) {
           // Store the API key in Chrome storage
@@ -53,13 +45,11 @@ function hideSpinner() {
               const activeTab = tabs[0];
               chrome.tabs.reload(activeTab.id);
               showApiMessage('API key submitted successfully.', 'success');
-
               hideSpinner();
             });
           });
         } else {
           hideSpinner();
-
           showApiMessage('Invalid API key. Please enter a valid API key.', 'error');
         }
       });
@@ -348,7 +338,7 @@ function hideSpinner() {
     // Show loading message with dynamic dots while processing
     const loadingMessage = showResponseMessage("  ", "loading");
     const loadingInterval = updateLoadingMessage(loadingMessage);
-    
+
     if (!accountId) {
       accountId = await getAccountDetails(bearerToken);
       if (!accountId) {
