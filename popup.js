@@ -6,18 +6,19 @@ document.addEventListener('DOMContentLoaded', function () {
   const submitWatchListButton = document.getElementById('submitWatchListButton');
   const bearerTokenLabel = document.getElementById('bearerTokenLabel');
   const bearerTokenInput = document.getElementById('bearerTokenInput');
-  const responseElement = document.getElementById('responseMessage'); // Added responseElement
+  const responseElement = document.getElementById('responseMessage');
   const messageElement = document.querySelector('.message');
 
   // Store the accountId once retrieved.
   let accountId;
 
-  // Function to show the spinner
-  function showSpinner() {
+  function showSpinner(element) {
     const spinner = document.createElement('span');
     spinner.classList.add('spinner');
-    spinner.style.marginTop = '20px';
-    messageElement.insertAdjacentElement('afterend', spinner);
+    if (element == document.querySelector('.message')) {
+      spinner.style.marginTop = '20px';
+    }
+    element.insertAdjacentElement('afterend', spinner);
   }
 
   // Function to hide the spinner
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   submitButton.addEventListener('click', function () {
-    showSpinner();
+    showSpinner(messageElement);
 
     const apiKey = apiKeyInput.value.trim();
 
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
   addWatchListButton.addEventListener('click', async function () {
     document.getElementById('initialContent').style.display = 'none';
     document.getElementById('watchListContent').style.display = 'flex';
-    await maintest();
+    await bearerInputField();
   });
 
   function getBearerToken() {
@@ -149,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   submitWatchListButton.addEventListener('click', async function () {
+    showSpinner(responseElement);
+
     resetMessageDisplay();
     const bearerToken = bearerTokenInput.value.trim();
 
@@ -160,9 +163,10 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
     }
     await main();
+    hideSpinner();
   });
 
-  async function maintest() {
+  async function bearerInputField() {
     let bearerToken = await getBearerToken();
     if (!bearerToken) {
       // Bearer token not found in input field, show the input field
@@ -228,22 +232,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Function to show response messages
   function showResponseMessage(message, type) {
-    if (!responseElement) {
-      console.error('Error: responseMessage element not found.');
-      return;
-    }
-
     const newMessageElement = document.createElement('p');
     newMessageElement.textContent = message;
     newMessageElement.classList.add(type);
     responseElement.appendChild(newMessageElement);
     responseElement.style.display = 'grid';
     responseElement.style.textAlign = 'center';
-    // Add the progress-message class if the type is "loading"
-    if (type === 'loading') {
-      newMessageElement.classList.add('progress-message', 'animating');
-    }
-    return newMessageElement; // Return the new message element
+    return newMessageElement;
   }
 
   function resetMessageDisplay() {
@@ -254,24 +249,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Clear the message content
     responseElement.textContent = '';
     responseElement.style.display = 'none';
-  }
-
-  // Function to update loading message with dynamic dots
-  function updateLoadingMessage(loadingMessage) {
-    if (!loadingMessage) {
-      console.error('Error: loadingMessage element not found.');
-      return;
-    }
-
-    // Create the spinner element
-    const spinner = document.createElement('span');
-    spinner.classList.add('spinner');
-
-    // Add the spinner and text to the loading message
-    loadingMessage.appendChild(spinner);
-
-    // Show the loading message
-    loadingMessage.style.display = 'block';
   }
 
   async function checkMovieInWatchlist(movieId, apiKey, bearerToken) {
@@ -335,10 +312,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function addMoviesToWatchlist(movies, apiKey, bearerToken) {
-    // Show loading message with dynamic dots while processing
-    const loadingMessage = showResponseMessage("  ", "loading");
-    const loadingInterval = updateLoadingMessage(loadingMessage);
-
     if (!accountId) {
       accountId = await getAccountDetails(bearerToken);
       if (!accountId) {
@@ -405,8 +378,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Hide the loading message when all responses are displayed
-    clearInterval(loadingInterval);
-    hideLoadingMessage(loadingMessage);
+    // clearInterval(loadingInterval);
+    // hideLoadingMessage(loadingMessage);
 
     // Show messages for already in watchlist, added, error, not found, and invalid entries
     if (errorMovies.length > 0) {
@@ -440,16 +413,5 @@ document.addEventListener('DOMContentLoaded', function () {
       const warningMessage = `Warning: ${alreadyInWatchlistMovies.length} movies already in watchlist: ${warningMessages.join(', ')}.`;
       showResponseMessage(warningMessage, 'warning');
     }
-  }
-
-  function hideLoadingMessage(loadingMessage) {
-    if (!loadingMessage) {
-      console.error('Error: loadingMessage element not found.');
-      return;
-    }
-
-    loadingMessage.textContent = ``;
-    loadingMessage.style.display = 'none';
-    return loadingMessage;
   }
 });
