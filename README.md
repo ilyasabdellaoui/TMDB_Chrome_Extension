@@ -1,4 +1,9 @@
-# 🎬 TMDB_Extension (v1.0.0) ![GitHub](https://img.shields.io/badge/version-1.0.0-brightgreen.svg) ![GitHub](https://img.shields.io/github/license/ilyasabdellaoui/TMDB_Chrome_Extension)
+# 🎬 TMDB_Extension (v1.0.0) 
+<center>
+
+![GitHub](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)
+
+</center>
 
 ## Table of Contents
 - [👋 Introduction](#introduction)
