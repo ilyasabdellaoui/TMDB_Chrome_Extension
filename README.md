@@ -1,9 +1,8 @@
 # 🎬 TMDB_Extension (v1.0.0) 
-<center>
 
-![GitHub](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)
-
-</center>
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-brightgreen.svg" alt="Version 1.0.0">
+</p>
 
 ## Table of Contents
 - [👋 Introduction](#introduction)
