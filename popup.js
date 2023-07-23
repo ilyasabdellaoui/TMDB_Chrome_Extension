@@ -376,11 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     }
-
-    // Hide the loading message when all responses are displayed
-    // clearInterval(loadingInterval);
-    // hideLoadingMessage(loadingMessage);
-
+    
     // Show messages for already in watchlist, added, error, not found, and invalid entries
     if (errorMovies.length > 0) {
       const errorMessages = errorMovies.map((movie) => `${movie.title} (${movie.year})`);
