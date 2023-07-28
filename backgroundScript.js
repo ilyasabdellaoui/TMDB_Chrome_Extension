@@ -6,7 +6,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const apiKey = data.apiKey;
       sendResponse(apiKey);
     });
-
     // Return true to indicate that the response will be sent asynchronously
     return true;
   }
